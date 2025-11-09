@@ -1,0 +1,45 @@
+{
+  "name": "dstu7564-ts-worker",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "High-performance Kupyna (DSTU 7564:2014) hash function implementation using WebAssembly with SIMD optimizations",
+  "keywords": [
+    "kupyna",
+    "dstu7564",
+    "hash",
+    "cryptography",
+    "webassembly",
+    "wasm",
+    "simd",
+    "web-worker"
+  ],
+  "author": "justpetrovych",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/justpetrovych/dstu7564-ts-worker.git"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build:wasm": "bash scripts/build-wasm.sh",
+    "build:vite": "vite build",
+    "build": "npm run build:wasm && npm run build:vite",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write \"src/**/*.{ts,tsx,json,css}\""
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
