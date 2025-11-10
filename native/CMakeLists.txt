@@ -38,7 +38,6 @@ if(EMSCRIPTEN)
         "-sWASM_BIGINT"                 # Native 64-bit integer support
         "-sMODULARIZE=1"                # Create factory function
         "-sEXPORT_ES6=1"                # ES6 module format
-        "-sUSE_ES6_IMPORT_META=0"       # Avoid import.meta issues
         "-sENVIRONMENT=web,worker"      # Target web and worker environments
         "-sALLOW_MEMORY_GROWTH=1"       # Allow memory growth
         "-sINITIAL_MEMORY=16MB"         # Initial memory size
