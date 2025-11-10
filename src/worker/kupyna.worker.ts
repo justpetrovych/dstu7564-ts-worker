@@ -103,15 +103,18 @@ async function handleHash(command: WorkerCommand): Promise<void> {
     const endTime = performance.now();
     const durationMs = endTime - startTime;
 
+    // Create a proper ArrayBuffer for transfer (avoid SharedArrayBuffer)
+    const hashBuffer = hash.buffer.slice(0) as ArrayBuffer;
+
     // Send result back with transferable
     postResponse(
       {
         type: 'HASH_SUCCESS' as WorkerResponseType.HASH_SUCCESS,
         id: command.id,
-        hash: hash.buffer,
+        hash: hashBuffer,
         durationMs,
       },
-      [hash.buffer]
+      [hashBuffer]
     );
   } catch (error) {
     postResponse({

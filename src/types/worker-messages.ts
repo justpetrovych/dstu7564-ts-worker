@@ -4,6 +4,9 @@
 
 import type { KupynaHashSize } from './kupyna-wasm';
 
+// Re-export for convenience
+export type { KupynaHashSize };
+
 // Message types from Main Thread to Worker
 export enum WorkerCommandType {
   INIT = 'INIT',
