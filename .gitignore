@@ -102,3 +102,12 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Generated WASM files (built by GitHub Actions)
+public/wasm/*.js
+public/wasm/*.wasm
+!public/wasm/.gitkeep
+
+# Native build artifacts
+native/build/
+native/build-wasm/
