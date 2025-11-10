@@ -38,9 +38,8 @@ export class KupynaClient {
 
   /**
    * Create a new Kupyna client
-   * @param workerUrl URL to the worker script
    */
-  constructor(private workerUrl: string) {}
+  constructor() {}
 
   /**
    * Initialize the worker and WASM module
@@ -57,10 +56,12 @@ export class KupynaClient {
 
     this.initPromise = new Promise((resolve, reject) => {
       try {
-        // Create worker
-        this.worker = new Worker(new URL(this.workerUrl, import.meta.url), {
-          type: 'module',
-        });
+        // Create worker - import worker dynamically with Vite's special syntax
+        // The worker path must be relative to this file
+        this.worker = new Worker(
+          new URL('../worker/kupyna.worker.ts', import.meta.url),
+          { type: 'module' }
+        );
 
         // Setup message handler
         this.worker.onmessage = (event: MessageEvent<WorkerResponse>) => {

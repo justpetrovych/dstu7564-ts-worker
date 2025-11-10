@@ -7,7 +7,7 @@ import { KupynaClient, toHex, formatBytes, formatDuration } from './lib/kupyna-c
 import type { KupynaHashSize } from './types/worker-messages';
 
 // Create Kupyna client
-const kupynaClient = new KupynaClient('./worker/kupyna.worker.ts');
+const kupynaClient = new KupynaClient();
 
 // UI elements
 let uploadArea: HTMLElement | null = null;
@@ -94,7 +94,9 @@ async function handleFile(file: File): Promise<void> {
 
     // Initialize client if needed
     if (!kupynaClient.isInitialized()) {
-      await kupynaClient.init('/wasm/kupyna.js');
+      // Use relative path with base URL for GitHub Pages
+      const wasmPath = `${import.meta.env.BASE_URL}wasm/kupyna.js`;
+      await kupynaClient.init(wasmPath);
     }
 
     // Read file
