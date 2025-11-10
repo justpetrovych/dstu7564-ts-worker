@@ -7,7 +7,6 @@ import type {
   KupynaModuleFactory,
   KupynaWasmModule,
   KupynaHashSize,
-  KupynaErrorCode,
 } from '../types/kupyna-wasm';
 
 export class KupynaWasm {

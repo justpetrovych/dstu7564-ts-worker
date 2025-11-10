@@ -28,7 +28,8 @@ export class KupynaClient {
   private pendingRequests = new Map<
     string,
     {
-      resolve: (value: unknown) => void;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      resolve: (value: any) => void;
       reject: (error: Error) => void;
       onProgress?: (progress: number) => void;
     }
@@ -113,7 +114,9 @@ export class KupynaClient {
     if (data instanceof Blob) {
       buffer = await data.arrayBuffer();
     } else if (data instanceof Uint8Array) {
-      buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+      // Create a proper ArrayBuffer copy to avoid SharedArrayBuffer issues
+      const slice = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+      buffer = slice instanceof ArrayBuffer ? slice : new Uint8Array(data).buffer;
     } else {
       buffer = data;
     }

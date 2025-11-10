@@ -60,7 +60,7 @@ function initUI(): void {
     uploadArea?.classList.remove('dragover');
 
     const files = e.dataTransfer?.files;
-    if (files && files.length > 0) {
+    if (files && files.length > 0 && files[0]) {
       handleFile(files[0]);
     }
   });
@@ -73,7 +73,7 @@ function handleFileSelect(event: Event): void {
   const target = event.target as HTMLInputElement;
   const files = target.files;
 
-  if (files && files.length > 0) {
+  if (files && files.length > 0 && files[0]) {
     handleFile(files[0]);
   }
 }
