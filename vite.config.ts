@@ -12,7 +12,7 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: true,
-    minify: 'terser',
+    minify: 'esbuild', // Use esbuild instead of terser (included by default)
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
@@ -23,7 +23,7 @@ export default defineConfig({
   // Web Worker configuration for ES Module support
   worker: {
     format: 'es',
-    plugins: [],
+    plugins: () => [], // Now a function that returns an array
   },
 
   // Server configuration for development
