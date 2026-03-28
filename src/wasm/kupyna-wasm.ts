@@ -23,17 +23,30 @@ export class KupynaWasm {
     }
 
     try {
-      // Dynamic import of the Emscripten-generated module
-      const createKupynaModule = (await import(
-        /* @vite-ignore */ wasmPath
-      )) as unknown as KupynaModuleFactory;
+      // Fetch the Emscripten JS file as text and re-import via a Blob URL.
+      // A direct dynamic import('/wasm/kupyna.js') would be rewritten by Vite's
+      // dev server (appending '?import'), which breaks static-asset serving.
+      const response = await fetch(wasmPath);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch WASM loader: ${response.status} ${response.statusText}`);
+      }
+      const scriptText = await response.text();
+      const blobUrl = URL.createObjectURL(
+        new Blob([scriptText], { type: 'application/javascript' })
+      );
 
-      // Initialize the module
+      let createKupynaModule: KupynaModuleFactory;
+      try {
+        const mod = await import(/* @vite-ignore */ blobUrl);
+        createKupynaModule = (mod.default ?? mod) as KupynaModuleFactory;
+      } finally {
+        URL.revokeObjectURL(blobUrl);
+      }
+
+      const basePath = wasmPath.substring(0, wasmPath.lastIndexOf('/'));
       this.module = await createKupynaModule({
         locateFile: (url: string) => {
-          // Resolve .wasm file relative to .js file
           if (url.endsWith('.wasm')) {
-            const basePath = wasmPath.substring(0, wasmPath.lastIndexOf('/'));
             return `${basePath}/${url}`;
           }
           return url;
