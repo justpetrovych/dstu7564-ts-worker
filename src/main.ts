@@ -94,7 +94,7 @@ async function handleFile(file: File): Promise<void> {
 
     // Initialize client if needed
     if (!kupynaClient.isInitialized()) {
-      await kupynaClient.init('/wasm/kupyna.js');
+      await kupynaClient.init(`${import.meta.env.BASE_URL}wasm/kupyna.js`);
     }
 
     // Read file
