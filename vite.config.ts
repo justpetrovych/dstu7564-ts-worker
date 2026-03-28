@@ -2,9 +2,6 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  // Base path for GitHub Pages deployment
-  // Format: /<REPO_NAME>/
-  base: '/dstu7564-ts-worker/',
 
   // Build configuration
   build: {
