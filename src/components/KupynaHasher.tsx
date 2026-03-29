@@ -119,7 +119,7 @@ export default function KupynaHasher() {
           <div className="flex items-center gap-2">
             <Badge variant="secondary">ДСТУ 7564:2014</Badge>
             <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">
-              Web Worker · Симуляція
+              Web Worker · WASM Stub
             </Badge>
           </div>
         </div>
@@ -239,10 +239,10 @@ export default function KupynaHasher() {
 
         {/* Info */}
         <div className="rounded-md bg-blue-50 border border-blue-200 px-4 py-3 text-xs text-blue-700 space-y-1">
-          <p className="font-semibold">Поточний статус: Web Worker · Симуляція</p>
+          <p className="font-semibold">Поточний статус: Web Worker · WASM Stub</p>
           <p>
-            Хеш обчислюється у Web Worker (0xAB × {hashSize}) — UI залишається
-            responsive. Наступний крок: WASM-заглушка у воркері.
+            WASM-модуль (stub.c → Emscripten) повертає 0xAB × {hashSize}.
+            Повний pipeline: Main Thread → Worker → WASM. Наступний крок: реальна Купина.
           </p>
         </div>
       </CardContent>

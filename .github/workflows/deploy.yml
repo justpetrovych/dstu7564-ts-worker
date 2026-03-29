@@ -22,6 +22,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 'latest'
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: Build WASM
+        run: bash scripts/build-stub-wasm.sh
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:

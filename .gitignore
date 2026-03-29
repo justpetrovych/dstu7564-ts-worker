@@ -9,5 +9,8 @@ dist/
 .vite/
 *.tsbuildinfo
 
+# Generated WASM artifacts (built in CI)
+public/wasm/
+
 # OS
 .DS_Store
