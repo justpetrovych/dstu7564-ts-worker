@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { HasherClient } from '@/lib/hasher-client';
+import { toHex, formatBytes } from '@/lib/hash-utils';
 
 type HashSizeBytes = 32 | 48 | 64;
 
@@ -20,18 +21,6 @@ const HASH_SIZE_LABELS: Record<HashSizeBytes, string> = {
   48: 'Купина-384',
   64: 'Купина-512',
 };
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-}
-
-function toHex(bytes: Uint8Array): string {
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
 
 export default function KupynaHasher() {
   const [file, setFile] = useState<File | null>(null);
