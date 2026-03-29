@@ -11,7 +11,7 @@ export type HashResponse =
 // ---------- WASM module types ----------
 
 interface WasmModule {
-  _stub_hash(dataPtr: number, dataLen: number, outPtr: number, outLen: number): void;
+  _kupyna_hash(dataPtr: number, dataLen: number, outPtr: number, outLen: number): number;
   _malloc(size: number): number;
   _free(ptr: number): void;
   HEAPU8: Uint8Array;
@@ -26,14 +26,13 @@ function loadWasm(): Promise<WasmModule> {
 
   modulePromise = (async () => {
     const base = import.meta.env.BASE_URL as string;
-    const jsUrl = `${base}wasm/stub.js`;
-    const wasmUrl = `${base}wasm/stub.wasm`;
+    const jsUrl = `${base}wasm/kupyna.js`;
+    const wasmUrl = `${base}wasm/kupyna.wasm`;
 
     const res = await fetch(jsUrl);
     if (!res.ok) throw new Error(`Failed to fetch ${jsUrl}: ${res.status}`);
     const jsText = await res.text();
 
-    // Wrap in a Blob so we can import it dynamically without Vite transforming it
     const blob = new Blob([jsText], { type: 'application/javascript' });
     const blobUrl = URL.createObjectURL(blob);
 
@@ -54,11 +53,12 @@ function loadWasm(): Promise<WasmModule> {
 
 // ---------- Hash computation ----------
 
+const KUPYNA_OK = 0;
+
 async function computeHash(data: ArrayBuffer, hashSize: 32 | 48 | 64): Promise<Uint8Array> {
   const mod = await loadWasm();
   const dataBytes = new Uint8Array(data);
 
-  // Allocate WASM memory (avoid malloc(0))
   const dataPtr = mod._malloc(dataBytes.byteLength || 1);
   const outPtr = mod._malloc(hashSize);
 
@@ -66,8 +66,12 @@ async function computeHash(data: ArrayBuffer, hashSize: 32 | 48 | 64): Promise<U
     if (dataBytes.byteLength > 0) {
       mod.HEAPU8.set(dataBytes, dataPtr);
     }
-    mod._stub_hash(dataPtr, dataBytes.byteLength, outPtr, hashSize);
-    // .slice() copies the bytes out before we free the WASM memory
+
+    const ret = mod._kupyna_hash(dataPtr, dataBytes.byteLength, outPtr, hashSize);
+    if (ret !== KUPYNA_OK) {
+      throw new Error(`kupyna_hash returned error code ${ret}`);
+    }
+
     return mod.HEAPU8.slice(outPtr, outPtr + hashSize);
   } finally {
     mod._free(dataPtr);
