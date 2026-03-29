@@ -1,10 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Upload, FileText, Hash, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { HasherClient } from '@/lib/hasher-client';
 
 type HashSizeBytes = 32 | 48 | 64;
 
@@ -41,6 +42,12 @@ export default function KupynaHasher() {
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const clientRef = useRef<HasherClient | null>(null);
+
+  useEffect(() => {
+    clientRef.current = new HasherClient();
+    return () => clientRef.current?.terminate();
+  }, []);
 
   function handleFile(f: File) {
     setFile(f);
@@ -67,31 +74,29 @@ export default function KupynaHasher() {
   }
 
   async function handleHash() {
-    if (!file || status === 'hashing') return;
+    if (!file || status === 'hashing' || !clientRef.current) return;
 
     setStatus('hashing');
     setProgress(0);
     setResult(null);
     setError(null);
 
-    const startTime = performance.now();
+    // Animate progress bar while waiting for worker
+    const interval = setInterval(() => {
+      setProgress((p) => (p < 90 ? p + 5 : p));
+    }, 25);
 
     try {
-      // Simulate progress over 400ms
-      const steps = 20;
-      for (let i = 1; i <= steps; i++) {
-        await new Promise<void>((r) => setTimeout(r, 20));
-        setProgress((i / steps) * 100);
-      }
+      const buffer = await file.arrayBuffer();
+      const { hash, durationMs } = await clientRef.current.hash(buffer, hashSize);
 
-      // Hardcoded stub result — every byte is 0xAB
-      const hashBytes = new Uint8Array(hashSize).fill(0xab);
-      const hash = toHex(hashBytes);
-      const durationMs = performance.now() - startTime;
+      clearInterval(interval);
+      setProgress(100);
 
-      setResult({ hash, fileSize: file.size, durationMs });
+      setResult({ hash: toHex(hash), fileSize: file.size, durationMs });
       setStatus('done');
     } catch (e) {
+      clearInterval(interval);
       setError(e instanceof Error ? e.message : 'Невідома помилка');
       setStatus('error');
     }
@@ -114,7 +119,7 @@ export default function KupynaHasher() {
           <div className="flex items-center gap-2">
             <Badge variant="secondary">ДСТУ 7564:2014</Badge>
             <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">
-              Симуляція
+              Web Worker · Симуляція
             </Badge>
           </div>
         </div>
@@ -201,7 +206,7 @@ export default function KupynaHasher() {
         {isHashing && (
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Обчислення {HASH_SIZE_LABELS[hashSize]}...</span>
+              <span>Обчислення {HASH_SIZE_LABELS[hashSize]} у Web Worker...</span>
               <span>{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} />
@@ -234,10 +239,10 @@ export default function KupynaHasher() {
 
         {/* Info */}
         <div className="rounded-md bg-blue-50 border border-blue-200 px-4 py-3 text-xs text-blue-700 space-y-1">
-          <p className="font-semibold">Поточний статус: Симуляція</p>
+          <p className="font-semibold">Поточний статус: Web Worker · Симуляція</p>
           <p>
-            Хеш-функція не реалізована — результат є захардкодженим (0xAB × {hashSize}).
-            Наступні кроки: Web Worker → WASM-заглушка → реальна реалізація Купина.
+            Хеш обчислюється у Web Worker (0xAB × {hashSize}) — UI залишається
+            responsive. Наступний крок: WASM-заглушка у воркері.
           </p>
         </div>
       </CardContent>
