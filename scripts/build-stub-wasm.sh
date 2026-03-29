@@ -17,7 +17,7 @@ emcc native/stub/stub.c \
   -sEXPORT_ES6=1 \
   -sEXPORT_NAME=createStubModule \
   '-sEXPORTED_FUNCTIONS=["_stub_hash","_malloc","_free"]' \
-  '-sEXPORTED_RUNTIME_METHODS=["ccall"]' \
+  '-sEXPORTED_RUNTIME_METHODS=["ccall","HEAPU8"]' \
   -sALLOW_MEMORY_GROWTH=1 \
   -sINITIAL_MEMORY=4194304 \
   -sENVIRONMENT=worker \
