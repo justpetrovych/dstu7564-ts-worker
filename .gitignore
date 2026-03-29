@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+
+# Cache
+.vite/
+*.tsbuildinfo
+
+# OS
+.DS_Store
