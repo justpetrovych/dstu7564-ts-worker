@@ -94,7 +94,7 @@ export default function KupynaHasher() {
   const isHashing = status === 'hashing';
   const speedMbps =
     result && result.durationMs > 0
-      ? ((result.fileSize / (1024 * 1024)) / (result.durationMs / 1000)).toFixed(1)
+      ? (result.fileSize / (1024 * 1024) / (result.durationMs / 1000)).toFixed(1)
       : null;
 
   return (
@@ -112,9 +112,7 @@ export default function KupynaHasher() {
             </Badge>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Криптографічна хеш-функція на WebAssembly
-        </p>
+        <p className="text-sm text-muted-foreground">Криптографічна хеш-функція на WebAssembly</p>
       </CardHeader>
 
       <CardContent className="space-y-5">
@@ -152,9 +150,7 @@ export default function KupynaHasher() {
           ) : (
             <div className="space-y-2">
               <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
-              <p className="text-sm font-medium">
-                Перетягніть файл або натисніть для вибору
-              </p>
+              <p className="text-sm font-medium">Перетягніть файл або натисніть для вибору</p>
               <p className="text-xs text-muted-foreground">Будь-який файл</p>
             </div>
           )}
@@ -163,9 +159,7 @@ export default function KupynaHasher() {
         {/* Controls */}
         <div className="flex items-center gap-3">
           <div className="flex-1">
-            <label className="text-xs text-muted-foreground mb-1.5 block">
-              Розмір хешу
-            </label>
+            <label className="text-xs text-muted-foreground mb-1.5 block">Розмір хешу</label>
             <select
               value={hashSize}
               onChange={(e) => setHashSize(Number(e.target.value) as HashSizeBytes)}
@@ -179,12 +173,7 @@ export default function KupynaHasher() {
           </div>
 
           <div className="pt-5">
-            <Button
-              size="lg"
-              onClick={handleHash}
-              disabled={!file || isHashing}
-              className="gap-2"
-            >
+            <Button size="lg" onClick={handleHash} disabled={!file || isHashing} className="gap-2">
               <Zap className="w-4 h-4" />
               {isHashing ? 'Обчислення...' : 'Обчислити хеш'}
             </Button>
@@ -230,8 +219,8 @@ export default function KupynaHasher() {
         <div className="rounded-md bg-blue-50 border border-blue-200 px-4 py-3 text-xs text-blue-700 space-y-1">
           <p className="font-semibold">ДСТУ 7564:2014 · Kupyna · WebAssembly + SIMD</p>
           <p>
-            Реалізація Купина скомпільована з C через Emscripten з оптимізацією
-            -O3 -flto -msimd128. Pipeline: Main Thread → Web Worker → WASM.
+            Реалізація Купина скомпільована з C через Emscripten з оптимізацією -O3 -flto -msimd128.
+            Pipeline: Main Thread → Web Worker → WASM.
           </p>
         </div>
       </CardContent>

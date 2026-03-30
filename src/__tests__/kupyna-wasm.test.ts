@@ -78,9 +78,9 @@ describe.skipIf(!wasmAvailable)('Kupyna WASM — one-shot hashes', () => {
   let mod: KupynaModule;
 
   beforeAll(async () => {
-    const { default: createModule } = await import(
+    const { default: createModule } = (await import(
       /* @vite-ignore */ pathToFileURL(WASM_JS).href
-    ) as { default: (opts?: object) => Promise<KupynaModule> };
+    )) as { default: (opts?: object) => Promise<KupynaModule> };
 
     // Pass wasmBinary directly to bypass fetch (works in Node.js test env)
     const wasmBinary = new Uint8Array(readFileSync(WASM_BIN)).buffer;
@@ -135,9 +135,9 @@ describe.skipIf(!wasmAvailable)('Kupyna WASM — incremental API', () => {
   let mod: KupynaModule;
 
   beforeAll(async () => {
-    const { default: createModule } = await import(
+    const { default: createModule } = (await import(
       /* @vite-ignore */ pathToFileURL(WASM_JS).href
-    ) as { default: (opts?: object) => Promise<KupynaModule> };
+    )) as { default: (opts?: object) => Promise<KupynaModule> };
 
     const wasmBinary = new Uint8Array(readFileSync(WASM_BIN)).buffer;
     mod = await createModule({ wasmBinary });
@@ -146,11 +146,7 @@ describe.skipIf(!wasmAvailable)('Kupyna WASM — incremental API', () => {
   const enc = (s: string) => new TextEncoder().encode(s);
 
   it('incremental "Hello, " + "World!" matches one-shot', () => {
-    const incremental = hashIncremental(
-      mod,
-      [enc('Hello, '), enc('World!')],
-      32,
-    );
+    const incremental = hashIncremental(mod, [enc('Hello, '), enc('World!')], 32);
     const oneShot = hashOneShot(mod, enc('Hello, World!'), 32);
     expect(incremental).toBe(oneShot);
   });
@@ -158,9 +154,7 @@ describe.skipIf(!wasmAvailable)('Kupyna WASM — incremental API', () => {
   it('single-chunk incremental matches one-shot for all hash sizes', () => {
     const input = enc('Hello, World!');
     for (const size of [32, 48, 64] as const) {
-      expect(hashIncremental(mod, [input], size)).toBe(
-        hashOneShot(mod, input, size),
-      );
+      expect(hashIncremental(mod, [input], size)).toBe(hashOneShot(mod, input, size));
     }
   });
 

@@ -7,7 +7,10 @@ export interface HashResult {
 
 export class HasherClient {
   private worker: Worker;
-  private pending = new Map<string, { resolve: (r: HashResult) => void; reject: (e: Error) => void; startTime: number }>();
+  private pending = new Map<
+    string,
+    { resolve: (r: HashResult) => void; reject: (e: Error) => void; startTime: number }
+  >();
 
   constructor() {
     this.worker = new Worker(new URL('../worker/hash.worker.ts', import.meta.url), {
