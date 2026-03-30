@@ -1,43 +1,45 @@
-# Купина (ДСТУ 7564:2014) — WebAssembly реалізація
+# Kupyna (DSTU 7564:2014) — WebAssembly Implementation
+
+> [Українська версія](README.UK.md)
 
 [![Deploy](https://github.com/justpetrovych/dstu7564-ts-worker/actions/workflows/deploy.yml/badge.svg)](https://github.com/justpetrovych/dstu7564-ts-worker/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Увага:** Це навчально-дослідницький проект для вивчення інтеграції WebAssembly з Web Workers у браузері. **Не призначений для production-використання.** Для реальних криптографічних задач використовуйте перевірені бібліотеки та нативні браузерні API (SubtleCrypto).
+> **Note:** This is an educational/research project for exploring WebAssembly integration with Web Workers in the browser. **Not intended for production use.** For real cryptographic needs, use verified libraries and native browser APIs (SubtleCrypto).
 
-Реалізація українського криптографічного стандарту **Купина (ДСТУ 7564:2014)** на WebAssembly з SIMD оптимізаціями, Web Worker та React 19 демо-сторінкою.
+Implementation of the Ukrainian cryptographic standard **Kupyna (DSTU 7564:2014)** in WebAssembly with SIMD optimizations, a Web Worker, and a React 19 demo page.
 
-**[→ Демо на GitHub Pages](https://justpetrovych.github.io/dstu7564-ts-worker/)**
+**[→ Live demo on GitHub Pages](https://justpetrovych.github.io/dstu7564-ts-worker/)**
 
-## Мета проєкту
+## Project Goals
 
-Цей репозиторій є практичним дослідженням того, **як правильно інтегрувати WASM у Web Worker**:
+This repository is a practical exploration of **how to correctly integrate WASM into a Web Worker**:
 
-- Як завантажити Emscripten-модуль у Worker, обходячи бандлер (Vite)
-- Як передавати дані між Main Thread і Worker через **Transferable Objects** (нульове копіювання)
-- Як кешувати WASM-модуль між запитами в межах одного Worker-процесу
-- Як організувати Promise-based API поверх `postMessage`-комунікації
-- Як правильно налаштувати COOP/COEP заголовки для `SharedArrayBuffer`
+- How to load an Emscripten module inside a Worker, bypassing the bundler (Vite)
+- How to pass data between the Main Thread and Worker using **Transferable Objects** (zero-copy)
+- How to cache the WASM module between requests within the same Worker process
+- How to build a Promise-based API on top of `postMessage` communication
+- How to properly configure COOP/COEP headers for `SharedArrayBuffer`
 
-## Особливості
+## Features
 
-- **WebAssembly SIMD** — C-реалізація скомпільована через Emscripten з `-O3 -msimd128`
-- **Web Worker** — обчислення в окремому потоці, UI не блокується
-- **Transferable Objects** — нульове копіювання `ArrayBuffer` між потоками
-- **Повна відповідність ДСТУ 7564:2014** — верифіковані криптографічні константи
-- **Vitest тести** — unit тести для утиліт + криптографічна коректність проти еталонних значень
+- **WebAssembly SIMD** — C implementation compiled via Emscripten with `-O3 -msimd128`
+- **Web Worker** — computation runs in a separate thread, UI stays responsive
+- **Transferable Objects** — zero-copy `ArrayBuffer` transfer between threads
+- **Full DSTU 7564:2014 compliance** — verified cryptographic constants
+- **Vitest tests** — unit tests for utilities + cryptographic correctness against reference values
 
-## Підтримувані розміри хешу
+## Supported Hash Sizes
 
-| Алгоритм    | Виведення  | Блок      | Раунди |
+| Algorithm   | Output     | Block     | Rounds |
 |-------------|------------|-----------|--------|
-| Купина-256  | 32 байти   | 512 біт   | 10     |
-| Купина-384  | 48 байтів  | 1024 біт  | 14     |
-| Купина-512  | 64 байти   | 1024 біт  | 14     |
+| Kupyna-256  | 32 bytes   | 512 bits  | 10     |
+| Kupyna-384  | 48 bytes   | 1024 bits | 14     |
+| Kupyna-512  | 64 bytes   | 1024 bits | 14     |
 
-## Архітектура
+## Architecture
 
-### Загальна схема потоків
+### Thread Flow
 
 ```mermaid
 flowchart TD
@@ -55,7 +57,7 @@ flowchart TD
     WASM -.->|"compiled from"| C
 ```
 
-### Завантаження WASM у Worker
+### WASM Loading in the Worker
 
 ```mermaid
 sequenceDiagram
@@ -63,19 +65,19 @@ sequenceDiagram
     participant V as Vite Dev Server
     participant FS as public/wasm/
 
-    Note over W: Перший запит хешування
+    Note over W: First hash request
     W->>V: fetch("/wasm/kupyna.js")
-    V-->>W: JS текст
+    V-->>W: JS text
     W->>W: new Blob([js]) → objectURL
     W->>W: dynamic import(objectURL)
     W->>FS: locateFile("kupyna.wasm") → fetch
     FS-->>W: .wasm binary
-    W->>W: KupynaModule({ wasmBinary }) — ініціалізація
-    Note over W: modulePromise кешується
-    Note over W: Наступні запити використовують кеш
+    W->>W: KupynaModule({ wasmBinary }) — initialization
+    Note over W: modulePromise is cached
+    Note over W: Subsequent requests use the cache
 ```
 
-### Передача даних між потоками
+### Data Transfer Between Threads
 
 ```mermaid
 sequenceDiagram
@@ -85,7 +87,7 @@ sequenceDiagram
 
     MT->>MT: ArrayBuffer (input data)
     MT->>W: postMessage({ id, buffer, bits }, [buffer])
-    Note over MT: buffer переданий — більше недоступний у MT
+    Note over MT: buffer transferred — no longer accessible in MT
 
     W->>H: ptr = _malloc(inputLen + outputLen)
     W->>H: HEAPU8.set(input, ptr)
@@ -94,138 +96,115 @@ sequenceDiagram
     W->>H: _free(ptr)
 
     W->>MT: postMessage({ id, result: result.buffer }, [result.buffer])
-    Note over MT: Promise резолвиться з HashResult
+    Note over MT: Promise resolves with HashResult
 ```
 
-## Ключові архітектурні рішення
+## Key Architectural Decisions
 
-### Чому Blob URL для завантаження WASM
+### Why Blob URL for WASM Loading
 
-Vite трансформує всі `import()` при збірці. Emscripten генерує власний `import()` для завантаження `.wasm` файлу, тому прямий `import('kupyna.js')` ламається після бандлінгу. Рішення — завантажити JS як текст через `fetch`, загорнути у Blob URL, і вже його передати в `import()`. Так Vite не чіпає Emscripten-модуль.
+Vite transforms all `import()` calls at build time. Emscripten generates its own `import()` to load the `.wasm` file, so a direct `import('kupyna.js')` breaks after bundling. The solution — load the JS as text via `fetch`, wrap it in a Blob URL, and pass that to `import()`. This way Vite never touches the Emscripten-generated module.
 
-### Чому Transferable, а не копія
+### Why Transferable Instead of Copy
 
-Для великих файлів (десятки MB) копіювання `ArrayBuffer` між потоками коштувало б суттєвого часу та пам'яті. `Transferable` передає **власність** буфера без копіювання — O(1) операція незалежно від розміру.
+For large files (tens of MB), copying an `ArrayBuffer` between threads carries a significant time and memory cost. `Transferable` transfers **ownership** of the buffer without copying — an O(1) operation regardless of size.
 
-### Чому один Worker, а не Worker Pool
+### Why a Single Worker Instead of a Worker Pool
 
-Для демо-сценарію (один файл за раз) один Worker достатній. Модуль WASM ініціалізується один раз і кешується. Для паралельної обробки кількох файлів варто розглянути `WorkerPool` або `SharedArrayBuffer` + `Atomics`.
+For the demo scenario (one file at a time), a single Worker is sufficient. The WASM module is initialized once and cached. For parallel processing of multiple files, consider a `WorkerPool` or `SharedArrayBuffer` + `Atomics`.
 
-## Структура проєкту
+## Project Structure
 
 ```
 dstu7564-ts-worker/
 ├── native/
-│   ├── src/kupyna.c            # Алгоритм ДСТУ 7564:2014
-│   ├── src/kupyna_tables.c     # 16 KB таблиця підстановок
-│   ├── include/kupyna.h        # Публічний C API
-│   └── CMakeLists.txt          # Emscripten конфігурація
+│   ├── src/kupyna.c            # DSTU 7564:2014 algorithm
+│   ├── src/kupyna_tables.c     # 16 KB substitution table
+│   ├── include/kupyna.h        # Public C API
+│   └── CMakeLists.txt          # Emscripten configuration
 ├── scripts/build-wasm.sh       # cmake + emmake → public/wasm/
 ├── src/
 │   ├── components/
-│   │   ├── KupynaHasher.tsx    # Головний UI компонент
+│   │   ├── KupynaHasher.tsx    # Main UI component
 │   │   └── ui/                 # Button, Card, Progress, Badge
-│   ├── worker/hash.worker.ts   # Web Worker + WASM завантаження
-│   ├── lib/hasher-client.ts    # Promise API для Worker
+│   ├── worker/hash.worker.ts   # Web Worker + WASM loading
+│   ├── lib/hasher-client.ts    # Promise API for Worker
 │   ├── lib/hash-utils.ts       # toHex, formatBytes
-│   └── __tests__/              # Vitest тести
+│   └── __tests__/              # Vitest tests
 └── .github/workflows/deploy.yml
 ```
 
-## Локальна розробка
+## Local Development
 
-### Передумови
+### Prerequisites
 
 - Node.js ≥ 20
 - pnpm ≥ 9
-- [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) (для компіляції WASM)
+- [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) (for WASM compilation)
 
-### Запуск
+### Getting Started
 
 ```bash
-# Клонування
+# Clone
 git clone https://github.com/justpetrovych/dstu7564-ts-worker.git
 cd dstu7564-ts-worker
 
-# Залежності
+# Install dependencies
 pnpm install
 
-# Компіляція WASM (потрібен emcc)
+# Compile WASM (requires emcc)
 pnpm build:wasm
 
-# Dev сервер
+# Dev server
 pnpm dev
 ```
 
-### Тести
+### Tests
 
 ```bash
-pnpm test          # Запустити всі тести
-pnpm test:watch    # Watch режим
+pnpm test          # Run all tests
+pnpm test:watch    # Watch mode
 ```
 
-Утилітарні тести запускаються завжди. WASM криптографічні тести запускаються якщо `public/wasm/kupyna.js` збудований.
+Utility tests always run. WASM cryptographic tests run only if `public/wasm/kupyna.js` has been built.
 
-### Збірка
+### Build
 
 ```bash
 pnpm build:wasm    # WASM (Emscripten)
 pnpm build         # Vite bundle
-pnpm preview       # Попередній перегляд
+pnpm preview       # Preview build
 ```
 
-## Оптимізації компіляції
+## Compiler Optimizations
 
 ```bash
--O3 -flto          # Максимальна оптимізація + LTO
--msimd128          # SIMD векторні інструкції
--sWASM_BIGINT      # Нативні 64-бітні операції (без i64 легалізації)
--sMODULARIZE=1     # ES Module з фабричною функцією
--sEXPORT_ES6=1     # ES6 export для чистого імпорту у Worker
+-O3 -flto          # Maximum optimization + LTO
+-msimd128          # SIMD vector instructions
+-sWASM_BIGINT      # Native 64-bit operations (no i64 legalization)
+-sMODULARIZE=1     # ES Module with factory function
+-sEXPORT_ES6=1     # ES6 export for clean import in Worker
 ```
 
-## Криптографічна верифікація
+## Cryptographic Verification
 
-Константи алгоритму (S-Boxes, IV, раундові константи) верифіковані відповідно до:
-1. **Офіційний стандарт**: ДСТУ 7564:2014
-2. **Референсна реалізація**: [privat-it/cryptonite](https://github.com/privat-it/cryptonite)
+Algorithm constants (S-Boxes, IV, round constants) are verified against:
+1. **Official standard**: DSTU 7564:2014
+2. **Reference implementation**: [privat-it/cryptonite](https://github.com/privat-it/cryptonite)
 
-Еталонні значення для тестів отримані нативною компіляцією через GCC:
+Reference values for tests were obtained via native GCC compilation:
 
-| Вхід                | Розмір  | Хеш (перші 16 байт)      |
+| Input               | Size    | Hash (first 16 bytes)    |
 |---------------------|---------|--------------------------|
-| `""` (порожній)     | 256-bit | `cd5101d1ccdf0d1d...`    |
+| `""` (empty)        | 256-bit | `cd5101d1ccdf0d1d...`    |
 | `"Hello, World!"`   | 256-bit | `3adab8ab5c58f965...`    |
 | `"Hello, World!"`   | 384-bit | `547b06174c72476d...`    |
 | `"Hello, World!"`   | 512-bit | `de3614f39b0dbe8a...`    |
 
-## Деплоймент на GitHub Pages
+## Additional Resources
 
-```mermaid
-flowchart LR
-    PUSH["git push → main"]
-    EMSDK["Emscripten 3.1.68\nbuild WASM"]
-    TEST["Vitest\n17 тестів"]
-    VITE["Vite build\ndist/"]
-    PAGES["GitHub Pages"]
-
-    PUSH --> EMSDK --> TEST --> VITE --> PAGES
-```
-
-Dev/preview сервери додають заголовки `Cross-Origin-Opener-Policy` та `Cross-Origin-Embedder-Policy` для підтримки `SharedArrayBuffer`.
-
-## Додаткові ресурси
-
-- [ДСТУ 7564:2014](https://usts.kiev.ua/wp-content/uploads/2020/07/dstu-7564-2014.pdf)
+- [DSTU 7564:2014 (PDF)](https://usts.kiev.ua/wp-content/uploads/2020/07/dstu-7564-2014.pdf)
 - [Kupyna Specification (eprint)](https://eprint.iacr.org/2015/885.pdf)
 - [Emscripten Documentation](https://emscripten.org/docs/)
 - [Using the Web Workers API — MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers)
 - [Transferable objects — MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects)
-
-## Ліцензія
-
-MIT License. Реалізація призначена для освітніх та дослідницьких цілей.
-
----
-
-**Створено з 💙💛 для України**
